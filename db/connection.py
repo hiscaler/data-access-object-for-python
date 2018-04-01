@@ -2,15 +2,23 @@
 
 
 class Connection(object):
+
     schemaMap = {
         'mysql': 'db/mysql/schema'
     }
 
-    def __init__(self):
+    def __init__(self, config={}):
+        self._db_class = ''
         self._db = None
-        self.dsn = None
-        self.username = ''
-        self.password = ''
+        dsn = config['dsn'] if 'dsn' in config else None
+        username = config['username'] if 'username' in config else ''
+        password = config['password'] if 'password' in config else ''
+        if dsn is None or not username or not password:
+            raise Exception('Error DSN or username or password value.')
+
+        self.dsn = dsn
+        self.username = username
+        self.password = password
         self.host = '127.0.0.1'
         self.database = ''
         self.port = 3306
@@ -35,3 +43,7 @@ class Connection(object):
 
     def cursor(self):
         pass
+
+
+if __name__ == '__main__':
+    db = Connection()
