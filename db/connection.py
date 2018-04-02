@@ -3,10 +3,12 @@
 """
 see http://kuanghy.github.io/2015/08/16/python-dbapi
 """
+from command import Command
 from dbexceptions import DatabaseErrorException
+from object import Object
 
 
-class Connection(object):
+class Connection(Object):
     apilevel = '1.0'
     paramstyle = 'named'
     threadsafety = 3
@@ -32,11 +34,11 @@ class Connection(object):
         self.username = username
         self.password = password
         self.host = '127.0.0.1'
-        self.database = ''
+        self.database = config['database']
         self.port = 3306
         self.charset = 'utf-8'
         self.table_prefix = ''
-        self.cursor = None
+        # self.cursor = None
 
     def connection(self):
         if self.db is None:
@@ -47,7 +49,8 @@ class Connection(object):
                     print('Driver class is ' + driver_class)
                     if driver_class == 'pymysql':
                         import pymysql
-                        self.db = pymysql.connect(self.host, self.username, self.password, self.database)
+                        self.db = pymysql.connect(host=self.host, user=self.username, password=self.password,
+                                                  database=self.database, port=self.port)
                 except ImportError as ex:
                     print("Import error, {message}.".format(message=str(ex)))
 
@@ -72,14 +75,20 @@ class Connection(object):
         else:
             raise DatabaseErrorException('No active connection.')
 
+    def create_command(self, sql=None, params={}):
+        command = Command(**{'db': self, 'sql': sql})
+        return command.bind_values(params)
+
 
 if __name__ == '__main__':
     conn = Connection('pymysql', {
         'username': 'root',
         'password': 'root',
         'database': 'dao_test',
+        'port': 3306,
         'charset': 'utf-8',
         'table_prefix': '',
     })
     db = conn.connection()
-    print(db)
+    items = conn.create_command('SELECT * FROM user').query_all()
+    print(items)

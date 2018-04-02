@@ -1,18 +1,27 @@
 # encoding=utf-8
+from object import Object
 
 
 class Command(object):
-    db = None
-    params = {}
+    def __init__(self, **kwargs):
+        for name, value in kwargs.items():
+            self.__setattr__(name, value)
 
-    def __init__(self):
-        self._sql = ''
+    def bind_values(self, params):
+        return self
 
     def query(self):
         pass
 
     def query_all(self):
-        pass
+        items = []
+        cursor = self.db.cursor()
+        cursor.execute(self.sql)
+        columns = [column[0] for column in cursor.description]
+        for row in cursor.fetchall():
+            items.append(dict(zip(columns, row)))
+
+        return items
 
     def query_one(self):
         pass
