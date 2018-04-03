@@ -5,16 +5,18 @@ see http://kuanghy.github.io/2015/08/16/python-dbapi
 """
 from command import Command
 from dbexceptions import DatabaseErrorException
+from dbexceptions import NotSupportedErrorException
 from object import Object
 
 
 class Connection(Object):
+    _schema = None
     apilevel = '1.0'
     paramstyle = 'named'
     threadsafety = 3
     name = None
     schemaMap = {
-        'mysql': 'db/mysql/schema'
+        'mysql': 'db.mysql.schema'
     }
     _drivers_map = {
         'pymysql': 'pymysql',
@@ -79,6 +81,23 @@ class Connection(Object):
         command = Command(**{'db': self, 'sql': sql})
         return command.bind_values(params)
 
+    def get_driver_name(self):
+        return self._driver
+
+    def get_schema(self):
+        if self._schema is not None:
+            return self._schema
+
+        driver = self.get_driver_name()
+        if driver == 'mysql' or driver == 'pymysql':
+            driver = 'mysql'
+
+        if driver in self.schemaMap:
+            config = Object.create_object(self.schemaMap[driver])
+            return config
+        else:
+            raise NotSupportedErrorException("Connection does not support reading schema information for '{driver}' DBMS.".format(driver=driver))
+
 
 if __name__ == '__main__':
     conn = Connection('pymysql', {
@@ -90,5 +109,5 @@ if __name__ == '__main__':
         'table_prefix': '',
     })
     db = conn.connection()
-    items = conn.create_command('SELECT * FROM user').query_all()
+    items = conn.create_command('SELECT * FROM user where id = :id', {'id': 1}).query_all()
     print(items)

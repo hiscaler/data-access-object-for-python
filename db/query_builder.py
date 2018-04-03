@@ -1,4 +1,4 @@
-# encodin=utf-8
+# encoding=utf-8
 
 
 class QueryBuilder(object):
@@ -11,7 +11,7 @@ class QueryBuilder(object):
         'BETWEEN': 'buildBetweenCondition',
     }
 
-    def __init__(self):
-        self.db = None
+    def __init__(self, connection):
+        self.db = connection
         self.separator = ' '
         self.type_map = {}
