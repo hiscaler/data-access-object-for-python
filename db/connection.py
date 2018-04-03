@@ -58,7 +58,7 @@ class Connection(Object):
                 raise DatabaseErrorException(
                     '{driver} is not supported or driver name is error.'.format(driver=self._driver))
 
-        return self.db;
+        return self.db
 
     def close(self):
         self.db = None

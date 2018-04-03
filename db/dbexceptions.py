@@ -1,7 +1,13 @@
 # encoding=utf-8
+"""Exceptions define"""
 
 
-class WarningException(StandardError):
+class StandardErrorException(BaseException):
+    def __init__(self, *args, **kwargs):
+        pass
+
+
+class WarningException(StandardErrorException):
     """警告异常基类"""
 
     def __init__(self, *args, **kwargs):
