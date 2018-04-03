@@ -3,7 +3,10 @@ from object import Object
 
 
 class Command(object):
+    _sql = ''
+
     raw_sql = ''
+
     params = {}
 
     def __init__(self, **kwargs):
@@ -54,18 +57,22 @@ class Command(object):
     def query_column(self):
         pass
 
-    def insert(self):
-        pass
+    def insert(self, table, columns):
+        params = {}
+        sql = self.db.get_query_builder().insert(table, columns)
+        return self.set_sql(sql).bind_values(params)
 
     def batch_insert(self, table, columns):
-        fields = values = []
-        for field, value in columns.items:
-            fields.append(field)
-            values.append(value)
-        sql = "INSERT INTO {table}"
+        pass
 
     def update(self):
         pass
 
     def delete(self):
         pass
+
+    def set_sql(self, sql):
+        if (sql != self._sql):
+            pass
+
+        return self

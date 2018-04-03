@@ -79,7 +79,10 @@ class Connection(Object):
 
     def create_command(self, sql=None, params={}):
         command = Command(**{'db': self, 'sql': sql})
-        return command.bind_values(params)
+        if params:
+            return command.bind_values(params)
+        else:
+            return command
 
     def get_driver_name(self):
         return self._driver
@@ -93,10 +96,14 @@ class Connection(Object):
             driver = 'mysql'
 
         if driver in self.schemaMap:
-            config = Object.create_object(self.schemaMap[driver])
-            return config
+            self._schema = Object.create_object(self.schemaMap[driver], {'db': self})
+
+            return self._schema
         else:
             raise NotSupportedErrorException("Connection does not support reading schema information for '{driver}' DBMS.".format(driver=driver))
+
+    def get_query_builder(self):
+        return self.get_schema().get_query_builder()
 
 
 if __name__ == '__main__':
@@ -109,5 +116,11 @@ if __name__ == '__main__':
         'table_prefix': '',
     })
     db = conn.connection()
+    # Command
+    commmand = conn.create_command()
+    print(commmand)
+    # Query data
     items = conn.create_command('SELECT * FROM user where id = :id', {'id': 1}).query_all()
+    # Insert data
+    conn.create_command().insert('user', {'username': 'username1', 'password': '123456'})
     print(items)

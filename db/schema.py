@@ -1,5 +1,7 @@
 # encoding=utf-8
 
+from db.query_builder import QueryBuilder
+
 
 class Schema(object):
     TYPE_PK = 'pk'
@@ -11,6 +13,8 @@ class Schema(object):
     _column_quote_character = '"'
 
     _table_names = set()
+
+    _builder = None
 
     def __init__(self, db):
         self.db = db
@@ -62,3 +66,12 @@ class Schema(object):
             name = name
 
         return name
+
+    def get_query_builder(self):
+        if self._builder is None:
+            self._builder = self.create_query_builder()
+
+        return self._builder
+
+    def create_query_builder(self):
+        return QueryBuilder(self.db)
