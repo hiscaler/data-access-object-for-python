@@ -14,6 +14,5 @@ class Object(object):
 
     @staticmethod
     def create_object(module_name, params=[]):
-        module = importlib.import_module(module_name)
-
-        return module
+        obj = importlib.import_module(module_name)
+        return getattr(obj, string.capwords(module_name.split('.')[-1]))(params)
