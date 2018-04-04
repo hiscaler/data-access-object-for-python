@@ -10,6 +10,8 @@ from object import Object
 
 
 class Connection(Object):
+    debug = False
+
     _schema = None
     apilevel = '1.0'
     paramstyle = 'named'
@@ -48,7 +50,8 @@ class Connection(Object):
                 driver_class = self._drivers_map[self._driver]
                 try:
                     __import__(driver_class, globals=globals())
-                    print('Driver class is ' + driver_class)
+                    if self.debug:
+                        print('Driver class is ' + driver_class)
                     if driver_class == 'pymysql':
                         import pymysql
                         self.db = pymysql.connect(host=self.host, user=self.username, password=self.password,
@@ -98,12 +101,17 @@ class Connection(Object):
         if driver in self.schemaMap:
             self._schema = Object.create_object(self.schemaMap[driver], {'db': self})
 
+            print(self._schema)
             return self._schema
         else:
-            raise NotSupportedErrorException("Connection does not support reading schema information for '{driver}' DBMS.".format(driver=driver))
+            raise NotSupportedErrorException(
+                "Connection does not support reading schema information for '{driver}' DBMS.".format(driver=driver))
 
     def get_query_builder(self):
         return self.get_schema().get_query_builder()
+
+    def quote_sql(self, sql):
+        return sql
 
 
 if __name__ == '__main__':
@@ -121,6 +129,11 @@ if __name__ == '__main__':
     print(commmand)
     # Query data
     items = conn.create_command('SELECT * FROM user where id = :id', {'id': 1}).query_all()
-    # Insert data
-    conn.create_command().insert('user', {'username': 'username1', 'password': '123456'})
+    print('#' * 80)
+    print("Query data result: ")
     print(items)
+    print('#' * 80)
+    # Insert data
+    insert_sql = conn.create_command().insert('user', {'username': 'username1', 'password': '123456'}).get_raw_sql()
+    print(insert_sql)
+    # print(items)

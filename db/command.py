@@ -7,6 +7,9 @@ class Command(object):
 
     raw_sql = ''
 
+    # @var Connection
+    db = None
+
     params = {}
 
     def __init__(self, **kwargs):
@@ -72,7 +75,39 @@ class Command(object):
         pass
 
     def set_sql(self, sql):
-        if (sql != self._sql):
-            pass
+        if sql != self._sql:
+            self._sql = self.db.quote_sql(sql)
+            self.params = {}
 
         return self
+
+    def get_raw_sql(self):
+        if not self.params:
+            return self._sql
+
+        params = {}
+        for name, value in self.params.items():
+            if isinstance(name, str) and name[0:1] != ':':
+                name = ':' + name
+
+            if isinstance(value, str):
+                params[name] = self.db.quote_value(value)
+            elif isinstance(value, bool):
+                params[name] = 'TRUE' if value else 'FALSE'
+            elif value is None:
+                params[name] = 'NULL'
+            elif isinstance(value, object):
+                params[name] = str(value)
+
+        if 1 not in params:
+            sql = self._sql
+            for k, v in params.items():
+                sql = sql.replace(k, v)
+            return sql
+
+        sql = ''
+        for i, part in self._sql.split('?').items():
+            sql += params[i] if i in params else ''
+            sql += part
+
+        return sql
