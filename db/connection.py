@@ -3,6 +3,8 @@
 """
 see http://kuanghy.github.io/2015/08/16/python-dbapi
 """
+import re
+
 from command import Command
 from dbexceptions import DatabaseErrorException
 from dbexceptions import NotSupportedErrorException
@@ -41,7 +43,10 @@ class Connection(Object):
         self.database = config['database']
         self.port = 3306
         self.charset = 'utf-8'
-        self.table_prefix = ''
+        table_prefix = ''
+        if 'table_prefix' in config:
+            table_prefix = config['table_prefix']
+        self.table_prefix = table_prefix
         # self.cursor = None
 
     def connection(self):
@@ -110,7 +115,23 @@ class Connection(Object):
     def get_query_builder(self):
         return self.get_schema().get_query_builder()
 
+    def quote_table_name(self, name):
+        return self.get_schema().quote_table_name(name)
+
+    def quote_column_name(self, name):
+        return self.get_schema().quote_column_name(name)
+
     def quote_sql(self, sql):
+        pattern = re.compile('(\\{\\{(%?[\w\-\. ]+%?)\\}\\}|\\[\\[([\w\-\. ]+)\\]\\])')
+        print re.findall(pattern, sql)
+        for item in re.findall(pattern, sql):
+            if item[2]:
+                replace_value = self.quote_column_name(item[2])
+            else:
+                replace_value = self.quote_table_name(item[0].replace('%', self.table_prefix))
+
+            sql = sql.replace(item[0], replace_value)
+
         return sql
 
 
@@ -121,7 +142,7 @@ if __name__ == '__main__':
         'database': 'dao_test',
         'port': 3306,
         'charset': 'utf-8',
-        'table_prefix': '',
+        'table_prefix': 'ww_',
     })
     db = conn.connection()
     # Command
@@ -136,4 +157,7 @@ if __name__ == '__main__':
     # Insert data
     insert_sql = conn.create_command().insert('user', {'username': 'username1', 'password': '123456'}).get_raw_sql()
     print(insert_sql)
+    sql = 'SELECT * FROM {{%tbl}} WHERE [[id]] = 1'
+    sql = conn.quote_sql(sql)
+    print(sql)
     # print(items)
