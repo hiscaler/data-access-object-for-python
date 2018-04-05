@@ -13,21 +13,96 @@ class Command(object):
     params = {}
 
     def __init__(self, **kwargs):
+        self.db = None
+        self.cursor = None
+        self.params = {}
+        self._pending_params = {}
+        self._sql = ''
+        self._refresh_table_name = None
         for name, value in kwargs.items():
             self.__setattr__(name, value)
+
+    def get_sql(self):
+        return self._sql
+
+    def set_sql(self, sql):
+        if sql != self._sql:
+            self._sql = self.db.quote_sql(sql)
+            self._pending_params = {}
+            self.params = {}
+            self._refresh_table_name = None
+
+        return self
+
+    def get_raw_sql(self):
+        if not self.params:
+            return self._sql
+
+        params = {}
+        for name, value in self.params.items():
+            if isinstance(name, str) and name[0:1] != ':':
+                name = ':' + name
+
+            if isinstance(value, str):
+                params[name] = self.db.quote_value(value)
+            elif isinstance(value, bool):
+                params[name] = 'TRUE' if value else 'FALSE'
+            elif value is None:
+                params[name] = 'NULL'
+            elif isinstance(value, object):
+                params[name] = str(value)
+
+        if 1 not in params:
+            sql = self._sql
+            for k, v in params.items():
+                sql = sql.replace(k, v)
+            return sql
+
+        sql = ''
+        for i, part in self._sql.split('?').items():
+            sql += params[i] if i in params else ''
+            sql += part
+
+        return sql
+
+    def prepare(self, for_read=None):
+        pass
+
+    def cancel(self):
+        pass
+
+    def bind_param(self, name, value, data_type=None, length=None, driver_options=None):
+        pass
+
+    def _bind_pending_params(self):
+        pass
+
+    def bind_value(self, name, value, data_type=None):
+        if data_type is None:
+            data_type = self.db.get_schema().get_type(value)
+
+        self._pending_params[name] = [value, data_type]
+        self.params[name] = value
+
+        return self
 
     def bind_values(self, values):
         if values:
             schema = self.db.get_schema()
             for name, value in values.items():
-                if isinstance(name, int):
-                    value = str(value)
-                self.params[':' + name] = value
+                if isinstance(value, list) or isinstance(value, set):
+                    self._pending_params[name] = value
+                    self.params[name] = value[0]
+                else:
+                    if isinstance(value, int):
+                        value = str(value)
+                    self._pending_params[name] = (value, schema.get_type(value))
+                    self.params[name] = value
 
         return self
 
     def query(self):
-        pass
+        return self.query_internal('')
 
     def query_all(self):
         items = []
@@ -65,49 +140,44 @@ class Command(object):
         sql = self.db.get_query_builder().insert(table, columns)
         return self.set_sql(sql).bind_values(params)
 
-    def batch_insert(self, table, columns):
+    def batch_insert(self, table, columns, rows):
+        sql = self.db.get_query_builder().batch_insert(table, columns, rows)
+
+        return self.set_sql(sql)
+
+    def update(self, table, columns, condition='', params={}):
+        sql = self.db.get_query_builder().update(table, columns, condition, params)
+
+        return self.set_sql(sql).bind_values(params)
+
+    def delete(self, table, condition='', params={}):
+        sql = self.db.get_query_builder().delete(table, condition, params)
+
+        return self.set_sql(sql).bind_values(params)
+
+    def execute(self):
+        sql = self.get_sql()
+        if sql == '':
+            return 0
+
+        self.prepare(False)
+
+        try:
+            self.cursor.execute()
+            n = self.cursor.row_count()
+            self.refresh_table_schema()
+            return n
+        except Exception as ex:
+            raise Exception(str(ex) + self.get_raw_sql())
+
+    def query_internal(self, method, fetch_mode=None):
         pass
 
-    def update(self):
-        pass
-
-    def delete(self):
-        pass
-
-    def set_sql(self, sql):
-        if sql != self._sql:
-            self._sql = self.db.quote_sql(sql)
-            self.params = {}
+    def require_table_schema_refresh(self, name):
+        self._refresh_table_name = name
 
         return self
 
-    def get_raw_sql(self):
-        if not self.params:
-            return self._sql
-
-        params = {}
-        for name, value in self.params.items():
-            if isinstance(name, str) and name[0:1] != ':':
-                name = ':' + name
-
-            if isinstance(value, str):
-                params[name] = self.db.quote_value(value)
-            elif isinstance(value, bool):
-                params[name] = 'TRUE' if value else 'FALSE'
-            elif value is None:
-                params[name] = 'NULL'
-            elif isinstance(value, object):
-                params[name] = str(value)
-
-        if 1 not in params:
-            sql = self._sql
-            for k, v in params.items():
-                sql = sql.replace(k, v)
-            return sql
-
-        sql = ''
-        for i, part in self._sql.split('?').items():
-            sql += params[i] if i in params else ''
-            sql += part
-
-        return sql
+    def refresh_table_schema(self):
+        if self._refresh_table_name is not None:
+            self.db.get_schema().refresh_table_schema(self._refresh_table_name)

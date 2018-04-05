@@ -6,18 +6,25 @@ from db.query_builder import QueryBuilder
 class Schema(object):
     TYPE_PK = 'pk'
     TYPE_UPK = 'upk'
+    TYPE_GIGPK = 'bigpk',
+    TYPE_UGIGPK = 'ubigpk'
     TYPE_CHAR = 'char'
+    TYPE_STRING = 'string'
+    TYPE_TEXT = 'text'
+    TYPE_SMALLINT = 'smallint'
+    TYPE_INTEGER = 'integer'
 
     _table_quote_character = "'"
 
     _column_quote_character = '"'
 
-    _table_names = set()
-
-    _builder = None
 
     def __init__(self, db):
         self.db = db
+        self.default_schema = ''
+        self._table_names = set()
+        self._tables = set()
+        self._builder = None
         pass
 
     def quote_value(self, value):
