@@ -7,6 +7,9 @@ class Schema(Schema):
 
     _column_quote_character = '`'
 
+    def quote_simple_table_name(self, name):
+        return name if name.find('`') > -1 else "`{name}`".format(name=name)
+
     def quote_simple_column_name(self, name):
         return name if name.find("`") > -1 or name == '*' else "`{name}`".format(name=name)
 
