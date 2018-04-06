@@ -1,26 +1,38 @@
 # encoding=utf-8
 from object import Object
+from db.data_reader import DataReader
 
 
 class Command(object):
     _sql = ''
 
-    raw_sql = ''
-
     # @var Connection
     db = None
 
+    cursor = None
+
+    fetch_mode = 'assoc'
+
     params = {}
 
+    _pending_params = {}
+
+    _sql = ''
+
     def __init__(self, **kwargs):
-        self.db = None
-        self.cursor = None
-        self.params = {}
-        self._pending_params = {}
-        self._sql = ''
+        # self.cursor = None
+        # self.fetch_mode = 'assoc'
+        # self.params = {}
+        # self._pending_params = {}
+        # self._sql = ''
+
         self._refresh_table_name = None
         for name, value in kwargs.items():
             self.__setattr__(name, value)
+
+        self.cursor = self.db.cursor()
+        if self._sql:
+            self._sql = self.db.quote_sql(self._sql)
 
     def get_sql(self):
         return self._sql
@@ -28,9 +40,12 @@ class Command(object):
     def set_sql(self, sql):
         if sql != self._sql:
             self._sql = self.db.quote_sql(sql)
-            self._pending_params = {}
-            self.params = {}
-            self._refresh_table_name = None
+
+        return self
+
+    def set_raw_sql(self, sql):
+        if sql != self._sql:
+            self._sql = sql
 
         return self
 
@@ -44,7 +59,7 @@ class Command(object):
                 name = ':' + name
 
             if isinstance(value, str):
-                params[name] = self.db.quote_value(value)
+                params[name] = self.db.get_schema().quote_value(value)
             elif isinstance(value, bool):
                 params[name] = 'TRUE' if value else 'FALSE'
             elif value is None:
@@ -65,11 +80,9 @@ class Command(object):
 
         return sql
 
-    def prepare(self, for_read=None):
-        pass
-
     def cancel(self):
-        pass
+        if self.cursor is not None:
+            self.cursor.close()
 
     def bind_param(self, name, value, data_type=None, length=None, driver_options=None):
         pass
@@ -104,7 +117,8 @@ class Command(object):
     def query(self):
         return self.query_internal('')
 
-    def query_all(self):
+    def query_all(self, fetch_mode=None):
+        return self.query_internal('all', fetch_mode)
         items = []
         raw_sql = self.sql
         for key, value in self.params.items():
@@ -112,6 +126,8 @@ class Command(object):
 
         self.raw_sql = raw_sql
         cursor = self.db.cursor()
+        print self.raw_sql
+        exit()
         cursor.execute(self.raw_sql)
         columns = [column[0] for column in cursor.description]
         for row in cursor.fetchall():
@@ -119,7 +135,8 @@ class Command(object):
 
         return items
 
-    def query_one(self):
+    def query_one(self, fetch_mode=None):
+        return self.query_internal('one', fetch_mode)
         cursor = self.db.cursor()
         cursor.execute(self.sql)
         columns = [column for column in cursor.description]
@@ -129,15 +146,18 @@ class Command(object):
 
         return item
 
-    def query_scalar(self):
-        pass
+    def query_scalar(self, fetch_mode):
+        result = self.query_internal('one', fetch_mode)
 
-    def query_column(self):
-        pass
+        return result
+
+    def query_column(self, fetch_mode):
+        result = self.query_internal('all', fetch_mode)
 
     def insert(self, table, columns):
         params = {}
         sql = self.db.get_query_builder().insert(table, columns)
+
         return self.set_sql(sql).bind_values(params)
 
     def batch_insert(self, table, columns, rows):
@@ -171,7 +191,27 @@ class Command(object):
             raise Exception(str(ex) + self.get_raw_sql())
 
     def query_internal(self, method, fetch_mode=None):
-        pass
+        raw_sql = self.get_raw_sql()
+        try:
+            self.cursor.execute(raw_sql)
+            if method == '':
+                method = 'all'
+            if method == 'all':
+                result = self.cursor.fetchall()
+            elif method == 'one':
+                result = self.cursor.fetchone()
+
+            if result is not None:
+                columns = [column[0] for column in self.cursor.description]
+                result = dict(zip(columns, result))
+
+            self.cursor.close()
+            self.cursor = None
+        except Exception as ex:
+            print raw_sql
+            raise Exception(str(ex))
+
+        return result
 
     def require_table_schema_refresh(self, name):
         self._refresh_table_name = name

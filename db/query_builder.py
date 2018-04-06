@@ -16,7 +16,7 @@ class QueryBuilder(object):
         self.separator = ' '
         self.type_map = {}
 
-    def insert(self, table, columns, params):
+    def insert(self, table, columns):
         schema = self.db.get_schema()
         names = set()
         values = []

@@ -49,7 +49,7 @@ class Connection(Object):
         self.table_prefix = table_prefix
         # self.cursor = None
 
-    def connection(self):
+    def open(self):
         if self.db is None:
             if self._driver is not None and self._driver in self._drivers_map:
                 driver_class = self._drivers_map[self._driver]
@@ -71,13 +71,17 @@ class Connection(Object):
         return self.db
 
     def close(self):
-        self.db = None
+        if self.db is not None:
+            self.db.close()
+            self.db = None
 
     def commit(self):
-        pass
+        if self.db is not None:
+            self.db.commit()
 
     def rollback(self):
-        pass
+        if self.db is not None:
+            self.db.rollback()
 
     def cursor(self):
         if self.db is not None:
@@ -86,11 +90,11 @@ class Connection(Object):
             raise DatabaseErrorException('No active connection.')
 
     def create_command(self, sql=None, params={}):
-        command = Command(**{'db': self, 'sql': sql})
-        if params:
-            return command.bind_values(params)
-        else:
-            return command
+        kwargs = {'db': self}
+        if sql:
+            kwargs['_sql'] = sql
+        command = Command(**kwargs)
+        return command.bind_values(params) if params else command
 
     def get_driver_name(self):
         return self._driver
@@ -104,9 +108,9 @@ class Connection(Object):
             driver = 'mysql'
 
         if driver in self.schemaMap:
+
             self._schema = Object.create_object(self.schemaMap[driver], {'db': self})
 
-            print(self._schema)
             return self._schema
         else:
             raise NotSupportedErrorException(
@@ -144,7 +148,7 @@ if __name__ == '__main__':
         'charset': 'utf-8',
         'table_prefix': 'ww_',
     })
-    db = conn.connection()
+    db = conn.open()
     # Command
     commmand = conn.create_command()
     print(commmand)

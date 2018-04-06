@@ -3,9 +3,10 @@
 from db.dbexceptions import DatabaseErrorException
 from db.dbexceptions import NotSupportedErrorException
 from db.query_builder import QueryBuilder
+from db.object import Object
 
 
-class Schema(object):
+class Schema(Object):
     TYPE_PK = 'pk'
     TYPE_UPK = 'upk'
     TYPE_BIGPK = 'bigpk'
@@ -31,8 +32,8 @@ class Schema(object):
 
     _column_quote_character = '"'
 
-    def __init__(self, db):
-        self.db = db
+    def __init__(self, params):
+        Object.init(self, params)
         self.default_schema = ''
         self._table_names = set()
         self._schema_names = None
@@ -139,12 +140,13 @@ class Schema(object):
         if name.find('(') > -1 or name.find('{{') > -1:
             return name
 
-        if name.find('.') > -1:
+        if name.find('.') == -1:
             return self.quote_simple_table_name(name)
 
-        parts = name.split('.')
-        for k, v in parts.items():
-            parts[k] = self.quote_simple_table_name(name)
+        names = name.split('.')
+        parts = []
+        for i in names:
+            parts.append(self.quote_simple_table_name(names[i]))
 
         return '.'.join(parts)
 

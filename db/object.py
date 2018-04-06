@@ -9,8 +9,9 @@ class Object(object):
         for k, v in params.items():
             self.__setattr__(k, v)
 
-    def init(self):
-        pass
+    def init(self, params):
+        for k, v in params.items():
+            self.__setattr__(k, v)
 
     @staticmethod
     def create_object(module_name, params=[]):
