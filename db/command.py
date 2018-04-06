@@ -202,7 +202,12 @@ class Command(object):
 
             if result is not None:
                 columns = [column[0] for column in self.cursor.description]
-                result = dict(zip(columns, result))
+                if method == 'all':
+                    items = []
+                    for item in result:
+                        items.append(dict(zip(columns, item)))
+                elif method == 'one':
+                    result = dict(zip(columns, result))
 
             self.cursor.close()
             self.cursor = None
