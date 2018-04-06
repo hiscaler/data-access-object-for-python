@@ -22,4 +22,17 @@ class QueryBuilder(QueryBuilder):
         return offset.isdigit() and offset != '0'
 
     def insert(self, table, columns):
-        return "INSERT INTO {table} VALUES ()"
+        schema = self.db.get_schema()
+        names = set()
+        values = []
+        for name, value in columns.items():
+            names.add(schema.quote_column_name(name))
+            values.append(schema.quote_value(value))
+
+        sql = "INSERT INTO {table}"
+        if names:
+            sql += '(' + ', '.join(names) + ')'
+
+        sql += ' VALUES (' + ', '.join(values) + ')'
+
+        return sql.format(table=schema.quote_table_name(table))
