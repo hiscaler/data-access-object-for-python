@@ -180,15 +180,14 @@ class Command(object):
         if sql == '':
             return 0
 
-        self.prepare(False)
-
         try:
-            self.cursor.execute()
-            n = self.cursor.row_count()
-            self.refresh_table_schema()
-            return n
+            self.cursor.execute(sql)
+            self.db.commit()
+            return self.cursor.rowcount
         except Exception as ex:
-            raise Exception(str(ex) + self.get_raw_sql())
+            self.db.rollback()
+            raise Exception(
+                "Execute `{sql}` sql error, error message: {message}".format(sql=self.get_raw_sql(), message=str(ex)))
 
     def query_internal(self, method, fetch_mode=None):
         raw_sql = self.get_raw_sql()
