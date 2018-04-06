@@ -200,14 +200,13 @@ class Command(object):
             elif method == 'one':
                 result = self.cursor.fetchone()
 
-            if result is not None:
+            if result:
                 columns = [column[0] for column in self.cursor.description]
                 if method == 'all':
-                    items = []
                     for item in result:
-                        items.append(dict(zip(columns, item)))
+                        dict(zip(columns, item))
                 elif method == 'one':
-                    result = dict(zip(columns, result))
+                    dict(zip(columns, result))
 
             self.cursor.close()
             self.cursor = None
