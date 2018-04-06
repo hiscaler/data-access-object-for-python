@@ -43,8 +43,24 @@ class QueryBuilder(object):
     def update(self, table, columns, condition, params):
         lines = []
         sql = 'UPDATE {table} SET '
-        where = ''
+        where = self.build_where(condition, params)
         if where:
             sql += ' WHERE ' + where
 
-        return sql
+        return sql.format(table=self.db.quote_table_name(table))
+
+    def delete(self, table, condition, params):
+        sql = 'DELETE FROM {table}'
+        where = self.build_where(condition, params)
+        if where:
+            sql += ' WHERE ' + where
+
+        return sql.format(table=self.db.quote_table_name(table))
+
+    def has_limit(self, limit):
+        limit = str(limit)
+        return limit.isdigit()
+
+    def has_offset(self, offset):
+        offset = str(offset)
+        return offset.isdigit() and offset != '0'
