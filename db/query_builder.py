@@ -19,15 +19,24 @@ class QueryBuilder(object):
         self.type_map = {}
 
     def insert(self, table, columns):
+        if not table or not columns:
+            raise IntegrityErrorException("`table` and `rows` param value can't empty.")
+
+        is_dict = isinstance(columns[0], dict)
         schema = self.db.get_schema()
-        names = set()
-        values = []
-        for name, value in columns.items():
-            names.add(schema.quote_column_name(name))
-            values.append(schema.quote_value(value))
+        if is_dict:
+            names = []
+            values = []
+            for name, value in columns.items():
+                names.add(schema.quote_column_name(name))
+                values.append(schema.quote_value(value))
+        else:
+            # is list or set or tuple
+            names = None
+            values = list(schema.quote_value(value) for value in columns)
 
         sql = "INSERT INTO {table}"
-        if names:
+        if names is not None:
             sql += '(' + ', '.join(names) + ')'
 
         sql += ' VALUES (' + ', '.join(values) + ')'
@@ -35,8 +44,8 @@ class QueryBuilder(object):
         return sql.format(table=schema.quote_table_name(table))
 
     def batch_insert(self, table, rows, names=tuple):
-        if not rows:
-            raise IntegrityErrorException("`rows` param values can't empty.")
+        if not table or not rows:
+            raise IntegrityErrorException("`table` and `rows` param value can't empty.")
 
         is_dict = isinstance(rows[0], dict)
         if not names and not is_dict:
