@@ -34,7 +34,7 @@ class QueryBuilder(object):
 
         return sql.format(table=schema.quote_table_name(table))
 
-    def batch_insert(self, table, rows, names=()):
+    def batch_insert(self, table, rows, names=tuple):
         if not rows:
             raise IntegrityErrorException("`rows` param values can't empty.")
 
@@ -42,33 +42,20 @@ class QueryBuilder(object):
         if not names and not is_dict:
             raise IntegrityErrorException("If `fields` param is empty, then rows must be a dict type.")
         else:
-            names = set(field for field in rows[0])
+            names = tuple(field for field in rows[0])
 
         schema = self.db.get_schema()
         names = (schema.quote_column_name(name) for name in names)
-        values = []
         if is_dict:
-            for row in rows:
-                t = []
-                for key in row:
-                    t.append(schema.quote_value(row[key]))
-                values.append(t)
+            values = list(', '.join(tuple(schema.quote_value(row[key]) for key in row)) for row in rows)
         else:
-            for row in rows:
-                t = []
-                for value in row:
-                    t.append(schema.quote_value(value))
-                values.append(t)
+            values = list(', '.join(tuple(schema.quote_value(value) for value in row)) for row in rows)
 
         sql = "INSERT INTO {table}"
         if names:
             sql += '(' + ', '.join(names) + ')'
 
-        sql += ' VALUES ('
-        for value in values:
-            sql += '(' + ', '.join(value) + '), '
-
-        sql = sql[0:-2] + ')'
+        sql += ' VALUES ((' + "), (".join(values) + '))'
 
         return sql.format(table=schema.quote_table_name(table))
 

@@ -160,7 +160,7 @@ class Command(object):
 
         return self.set_sql(sql).bind_values(params)
 
-    def batch_insert(self, table, rows, names=()):
+    def batch_insert(self, table, rows, names=tuple):
         sql = self.db.get_query_builder().batch_insert(table, rows, names)
 
         return self.set_sql(sql)
