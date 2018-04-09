@@ -1,5 +1,7 @@
 # encoding=utf-8
 
+from db.dbexceptions import IntegrityErrorException
+
 
 class QueryBuilder(object):
     PARAM_PREFIX = ':qp'
@@ -29,6 +31,44 @@ class QueryBuilder(object):
             sql += '(' + ', '.join(names) + ')'
 
         sql += ' VALUES (' + ', '.join(values) + ')'
+
+        return sql.format(table=schema.quote_table_name(table))
+
+    def batch_insert(self, table, rows, names=()):
+        if not rows:
+            raise IntegrityErrorException("`rows` param values can't empty.")
+
+        is_dict = isinstance(rows[0], dict)
+        if not names and not is_dict:
+            raise IntegrityErrorException("If `fields` param is empty, then rows must be a dict type.")
+        else:
+            names = set(field for field in rows[0])
+
+        schema = self.db.get_schema()
+        names = (schema.quote_column_name(name) for name in names)
+        values = []
+        if is_dict:
+            for row in rows:
+                t = []
+                for key in row:
+                    t.append(schema.quote_value(row[key]))
+                values.append(t)
+        else:
+            for row in rows:
+                t = []
+                for value in row:
+                    t.append(schema.quote_value(value))
+                values.append(t)
+
+        sql = "INSERT INTO {table}"
+        if names:
+            sql += '(' + ', '.join(names) + ')'
+
+        sql += ' VALUES ('
+        for value in values:
+            sql += '(' + ', '.join(value) + '), '
+
+        sql = sql[0:-2] + ')'
 
         return sql.format(table=schema.quote_table_name(table))
 
