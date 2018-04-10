@@ -1,5 +1,5 @@
 # encoding=utf-8
-from db.query_builder import QueryBuilder
+from ..query_builder import QueryBuilder
 
 
 class QueryBuilder(QueryBuilder):

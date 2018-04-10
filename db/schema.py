@@ -1,9 +1,9 @@
 # encoding=utf-8
 
-from db.dbexceptions import DatabaseErrorException
-from db.dbexceptions import NotSupportedErrorException
-from db.query_builder import QueryBuilder
-from db.object import Object
+from .dbexceptions import DatabaseErrorException
+from .dbexceptions import NotSupportedErrorException
+from .object import Object
+from .query_builder import QueryBuilder
 
 
 class Schema(Object):

@@ -1,5 +1,5 @@
-from db.schema import Schema
-from db.mysql.query_builder import QueryBuilder
+from ..mysql.query_builder import QueryBuilder
+from ..schema import Schema
 
 
 class Schema(Schema):

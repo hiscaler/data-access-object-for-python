@@ -1,6 +1,4 @@
 # encoding=utf-8
-from object import Object
-from db.data_reader import DataReader
 
 
 class Command(object):
