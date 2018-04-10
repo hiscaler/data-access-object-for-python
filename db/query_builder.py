@@ -1,6 +1,8 @@
 # encoding=utf-8
 
-from db.dbexceptions import IntegrityErrorException
+from .dbexceptions import IntegrityErrorException
+from .conditions.hash_condition import HashCondition
+from .object import Object
 
 
 class QueryBuilder(object):
@@ -12,6 +14,8 @@ class QueryBuilder(object):
         'OR': 'buildAndCondition',
         'BETWEEN': 'buildBetweenCondition',
     }
+
+    condition_classes = {}
 
     def __init__(self, connection):
         self.db = connection
@@ -69,7 +73,28 @@ class QueryBuilder(object):
         return sql.format(table=schema.quote_table_name(table))
 
     def build_condition(self, condition, params):
-        return ''
+        if isinstance(condition, dict):
+            if len(condition) == 0:
+                return ''
+
+            condition = self.create_condition(condition)
+
+        return str(condition)
+
+    def create_condition(self, condition):
+        if not isinstance(condition, dict):
+            operator = condition[0]
+            del condition[0]
+            if operator in self.condition_classes:
+                class_name = self.condition_classes[operator]
+            else:
+                class_name = 'db.conditions.SimpleCondition'
+
+            cls = Object.create_object(class_name)
+
+            return cls.fromDefinition(operator, condition)
+
+        return HashCondition(condition)
 
     def build_where(self, condition, params):
         where = self.build_condition(condition, params)
