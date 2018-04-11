@@ -3,7 +3,9 @@
 """
 see http://kuanghy.github.io/2015/08/16/python-dbapi
 """
+import importlib
 import re
+import string
 
 from command import Command
 from dbexceptions import DatabaseErrorException
@@ -108,14 +110,17 @@ class Database(Object):
 
     def get_builder(self):
         if self._builder is not None:
-            return self._schema
+            return self._builder
 
         driver = self.get_driver_name()
         if driver == 'mysql' or driver == 'pymysql':
             driver = 'mysql'
 
         if driver in self.builder_map:
-            self._builder = Object.create_object(self.builder_map[driver], {'db': self})
+            module_name = self.builder_map[driver]
+            obj = importlib.import_module(module_name)
+            name = "Builder" + string.capwords(module_name.split('_')[-1])
+            self._builder = getattr(obj, name)({'db': self})
 
             return self._builder
         else:
