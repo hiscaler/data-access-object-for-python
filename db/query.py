@@ -12,7 +12,12 @@ class Query(object):
 
     @property
     def raw_sql(self):
-        return self.raw_sql
+        sql = self.sql
+        if len(self.params):
+            for key, value in self.params.items():
+                sql = sql.repalce(key, value)
+
+        return sql
 
     def bind(self, params):
         if len(self.params) == 0:

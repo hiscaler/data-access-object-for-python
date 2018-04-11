@@ -9,9 +9,10 @@ from command import Command
 from dbexceptions import DatabaseErrorException
 from dbexceptions import NotSupportedErrorException
 from object import Object
+from query import Query
 
 
-class Connection(Object):
+class Database(Object):
     debug = False
 
     _schema = None
@@ -119,7 +120,7 @@ class Connection(Object):
                 "Connection does not support reading schema information for '{driver}' DBMS.".format(driver=driver))
 
     def query(self, sql):
-        query = Query(self.db, sql)
+        return Query(self.db, sql)
 
     def quote_table_name(self, name):
         return self.get_builder().quote_table_name(name)
@@ -139,42 +140,3 @@ class Connection(Object):
             sql = sql.replace(item[0], replace_value)
 
         return sql
-
-
-if __name__ == '__main__':
-    conn = Connection('pymysql', {
-        'username': 'root',
-        'password': 'root',
-        'database': 'dao_test',
-        'port': 3306,
-        'charset': 'utf-8',
-        'table_prefix': 'ww_',
-    })
-    db = conn.open()
-    # Command
-    commmand = conn.create_command()
-    print(commmand)
-    # Query data
-    items = conn.create_command('SELECT * FROM user where [[id]] = :id', {':id': 111}).query_one()
-    print('#' * 80)
-    print("Query data result: ")
-    print(items)
-    print('#' * 80)
-    # items = conn.create_command('SELECT * FROM user where id = :id', {':id': 1}).query_one()
-    # print(items)
-    # Insert data
-    insert_sql = conn.create_command().insert('user', {'username': 'username1', 'password': '123456'}).get_raw_sql()
-    print(insert_sql)
-    items = conn.create_command('SELECT * FROM user where id  =9').query_all()
-    print items
-    # sql = 'SELECT * FROM {{%tbl}} WHERE [[id]] = 1'
-    # sql = conn.quote_sql(sql)
-    # print(sql)
-    # print(items)
-    # Batch insert
-    sql = conn.create_command().batch_insert('user', [{'username': 'shuzi', 'password': 'shuzi_pwd'},
-                                                      {'username': 'shj', 'password': 'shj_pwd'}]).get_raw_sql()
-    print(sql)
-
-    sql = conn.create_command().update('user', {'username': 'usernamefix'}, {'id': 1}).get_raw_sql();
-    print(sql)
