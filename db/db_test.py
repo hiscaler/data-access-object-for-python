@@ -1,7 +1,7 @@
 # encoding=utf-8
 from db.database import Database
 
-conn = Database('pymysql', {
+db = Database('pymysql', {
     'username': 'root',
     'password': 'root',
     'database': 'dao_test',
@@ -9,9 +9,11 @@ conn = Database('pymysql', {
     'charset': 'utf-8',
     'table_prefix': 'ww_',
 })
-db = conn.open()
+db.open()
 
+from db.builder_mysql import BuilderMysql
 def raw_sql():
-    print(db.query('SELECT * FROM user WHERE [[id]] = :id').raw_sql())
+    print(db.query('SELECT [[id]], [[username]], [[password]] FROM user WHERE [[id]] = :id').bind({':id': 1}).raw_sql())
+
 
 raw_sql()

@@ -29,6 +29,10 @@ class Database(Object):
 
     _builder = None
 
+    builder_map = {
+        'mysql': 'db.builder_mysql',
+    }
+
     def __init__(self, driver, config={}):
         self._driver = driver.lower()
         self._db_class = ''
@@ -110,9 +114,8 @@ class Database(Object):
         if driver == 'mysql' or driver == 'pymysql':
             driver = 'mysql'
 
-        if driver in self.schemaMap:
-
-            self._builder = Object.create_object(self.schemaMap[driver], {'db': self})
+        if driver in self.builder_map:
+            self._builder = Object.create_object(self.builder_map[driver], {'db': self})
 
             return self._builder
         else:
@@ -120,7 +123,7 @@ class Database(Object):
                 "Connection does not support reading schema information for '{driver}' DBMS.".format(driver=driver))
 
     def query(self, sql):
-        return Query(self.db, sql)
+        return Query(self, sql)
 
     def quote_table_name(self, name):
         return self.get_builder().quote_table_name(name)
@@ -133,9 +136,9 @@ class Database(Object):
         print re.findall(pattern, sql)
         for item in re.findall(pattern, sql):
             if item[2]:
-                replace_value = self.quote_column_name(item[2])
+                replace_value = self.get_builder().quote_column_name(item[2])
             else:
-                replace_value = self.quote_table_name(item[0].replace('%', self.table_prefix))
+                replace_value = self.get_builder().quote_table_name(item[0].replace('%', self.table_prefix))
 
             sql = sql.replace(item[0], replace_value)
 

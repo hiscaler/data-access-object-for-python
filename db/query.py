@@ -4,20 +4,21 @@ class Query(object):
     def __init__(self, db, sql):
         self.db = db
         self.sql = sql
-        self.raw_sql = ''
         self.params = {}
 
     def sql(self):
         return self.sql
 
-    @property
     def raw_sql(self):
         sql = self.sql
         if len(self.params):
             for key, value in self.params.items():
-                sql = sql.repalce(key, value)
+                if isinstance(value, int):
+                    value = str(value)
 
-        return sql
+                sql = sql.replace(key, value)
+
+        return self.db.quote_sql(sql)
 
     def bind(self, params):
         if len(self.params) == 0:

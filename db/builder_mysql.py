@@ -1,5 +1,5 @@
 # encoding=utf-8
-from .builder import Builder
+from db.builder import Builder
 
 
 class BuilderMysql(Builder):
