@@ -33,10 +33,12 @@ class Query(object):
             cursor.execute(raw_sql)
             if method == '':
                 method = 'all'
-            if method == 'all':
+            if method in ['all', 'column']:
                 result = cursor.fetchall()
-            elif method == 'one':
+            elif method in ['one', 'scalar']:
                 result = cursor.fetchone()
+            else:
+                raise Exception('Bad `{method}` method'.format(method=method))
 
             if result:
                 columns = [column[0] for column in cursor.description]
@@ -45,6 +47,13 @@ class Query(object):
                         dict(zip(columns, item))
                 elif method == 'one':
                     dict(zip(columns, result))
+                elif method == 'scalar':
+                    result = result[0]
+                elif method == 'column':
+                    result = tuple(item[0] for item in result)
+                else:
+                    if method == 'scalar':
+                        return False
 
             cursor.close()
             cursor = None
@@ -58,3 +67,9 @@ class Query(object):
 
     def all(self):
         return self._query_internal('all')
+
+    def scalar(self):
+        return self._query_internal('scalar')
+
+    def column(self):
+        return self._query_internal('column')
