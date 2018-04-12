@@ -13,7 +13,7 @@ db.open()
 
 from db.builder_mysql import BuilderMysql
 def raw_sql():
-    print(db.query('SELECT [[id]], [[username]], [[password]] FROM user WHERE [[id]] = :id').bind({':id': 1}).raw_sql())
+    print(db.query('SELECT [[id]], [[username]], [[password]] FROM {{%user}} WHERE [[id]] = :id').bind({':id': 1}).raw_sql())
 
 
 raw_sql()

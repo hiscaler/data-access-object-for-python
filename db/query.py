@@ -13,10 +13,7 @@ class Query(object):
         sql = self.sql
         if len(self.params):
             for key, value in self.params.items():
-                if isinstance(value, int):
-                    value = str(value)
-
-                sql = sql.replace(key, value)
+                sql = sql.replace(key, self.db.quote_value(value))
 
         return self.db.quote_sql(sql)
 

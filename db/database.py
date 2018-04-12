@@ -136,14 +136,17 @@ class Database(Object):
     def quote_column_name(self, name):
         return self.get_builder().quote_column_name(name)
 
+    def quote_value(self, value):
+        return self.get_builder().quote_value(value)
+
     def quote_sql(self, sql):
         pattern = re.compile('(\\{\\{(%?[\w\-\. ]+%?)\\}\\}|\\[\\[([\w\-\. ]+)\\]\\])')
-        print re.findall(pattern, sql)
-        for item in re.findall(pattern, sql):
-            if item[2]:
+        items = set(re.findall(pattern, sql))
+        for item in items:
+            if len(item[2]):
                 replace_value = self.get_builder().quote_column_name(item[2])
             else:
-                replace_value = self.get_builder().quote_table_name(item[0].replace('%', self.table_prefix))
+                replace_value = self.get_builder().quote_table_name(item[1].replace('%', self.table_prefix))
 
             sql = sql.replace(item[0], replace_value)
 
