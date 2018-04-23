@@ -12,6 +12,7 @@ from dbexceptions import DatabaseErrorException
 from dbexceptions import NotSupportedErrorException
 from object import Object
 from query import Query
+from builder import Builder
 
 
 class Database(Object):
@@ -129,6 +130,9 @@ class Database(Object):
 
     def query(self, sql):
         return Query(self, sql)
+
+    def builder(self):
+        return Builder(self)
 
     def quote_table_name(self, name):
         return self.get_builder().quote_table_name(name)

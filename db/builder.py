@@ -11,10 +11,34 @@ class Builder(object):
     def one(cls, sql):
         pass
 
-    @classmethod
-    @abstractmethod
-    def insert(cls, table, values):
-        pass
+    def insert(self, table, params):
+        """Insert data"""
+        columns = []
+        values = []
+        if isinstance(params, dict):
+            for name, value in params.items():
+                columns.append(self.quote_column_name(name))
+                k = ':' + name
+                values.append(k)
+                del params[name]
+                params[k] = value
+        else:
+            _params = {}
+            for i, value in enumerate(params):
+                k = ':' + str(i)
+                values.append(k)
+                _params[k] = value
+            params = _params
+
+        if len(columns) == 0:
+            sql = "INSERT INTO {table} DEFAULT VALUES ({values})".format(table=self.quote_table_name(table),
+                                                                         values=', '.join(values))
+        else:
+            sql = "INSERT INTO {table} ({columns}) VALUES ({values})".format(table=self.quote_table_name(table),
+                                                                             columns=', '.join(columns),
+                                                                             values=', '.join(values))
+
+        return self.db.query(sql).bind(params)
 
     @classmethod
     @abstractmethod
