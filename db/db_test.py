@@ -12,10 +12,19 @@ db = Database('pymysql', {
 db.open()
 
 from db.builder_mysql import BuilderMysql
+
+
 def raw_sql():
     print(db.query('SELECT [[id]], [[username]], [[password]] FROM {{%user}} WHERE [[id]] = :id').bind({':id': 1}).raw_sql())
+
 
 raw_sql()
 
 item = db.query('SELECT [[id]], [[username]], [[password]] FROM user WHERE [[id]] = :id').bind({':id': 1}).one()
 print(item)
+
+# Insert sql
+sql = db.builder().insert('user', {'username': 'sz', 'password': 'pwd'}).raw_sql()
+print(sql)
+sql = db.builder().insert('user', ['sz', 'pwd']).raw_sql()
+print(sql)
