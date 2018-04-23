@@ -17,7 +17,7 @@ class Builder(object):
         values = []
         if isinstance(params, dict):
             for name, value in params.items():
-                columns.append(self.quote_column_name(name))
+                columns.append(self.db.quote_column_name(name))
                 k = ':' + name
                 values.append(k)
                 del params[name]
@@ -31,10 +31,10 @@ class Builder(object):
             params = _params
 
         if len(columns) == 0:
-            sql = "INSERT INTO {table} DEFAULT VALUES ({values})".format(table=self.quote_table_name(table),
+            sql = "INSERT INTO {table} DEFAULT VALUES ({values})".format(table=self.db.quote_table_name(table),
                                                                          values=', '.join(values))
         else:
-            sql = "INSERT INTO {table} ({columns}) VALUES ({values})".format(table=self.quote_table_name(table),
+            sql = "INSERT INTO {table} ({columns}) VALUES ({values})".format(table=self.db.quote_table_name(table),
                                                                              columns=', '.join(columns),
                                                                              values=', '.join(values))
 
