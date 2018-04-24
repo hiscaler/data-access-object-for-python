@@ -50,6 +50,11 @@ class Builder(object):
     def delete(cls, table, condition):
         pass
 
+    def truncate_table(self, table):
+        sql = 'TRUNCATE TABLE {table}'.format(table=self.db.quote_table_name(table))
+
+        return self.db.query(sql)
+
     @staticmethod
     def quote(s):
         return "'" + str(s).replace("'", "''") + "'"
