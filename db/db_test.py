@@ -15,7 +15,8 @@ from db.builder_mysql import BuilderMysql
 
 
 def raw_sql():
-    print(db.query('SELECT [[id]], [[username]], [[password]] FROM {{%user}} WHERE [[id]] = :id').bind({':id': 1}).raw_sql())
+    print(
+    db.query('SELECT [[id]], [[username]], [[password]] FROM {{%user}} WHERE [[id]] = :id').bind({':id': 1}).raw_sql())
 
 
 raw_sql()
@@ -35,3 +36,7 @@ print(sql)
 
 sql = db.builder().update('user', {'username': 'sz', 'password': 'pwd'}, {'id': 1, 'username': 'sss'}).raw_sql()
 print(sql)
+
+# Delete sql
+sql = db.builder().delete('user', {'username': 'sz', 'password': 'pwd'}).raw_sql()
+print sql

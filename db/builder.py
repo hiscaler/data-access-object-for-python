@@ -66,10 +66,20 @@ class Builder(object):
 
         return self.db.query(sql).bind(params)
 
-    @classmethod
-    @abstractmethod
-    def delete(cls, table, condition):
-        pass
+    def delete(self, table, where=None):
+        sql = 'DELETE FROM {table}'.format(table=self.db.quote_table_name(table))
+        params = {}
+        if where is not None:
+            if isinstance(where, str) and len(where) > 0:
+                sql += ' WHERE ' + where
+            elif isinstance(where, dict):
+                w = []
+                for name, value in where.items():
+                    w.append(self.db.quote_column_name(name) + ' = :' + name)
+                    params[':' + name] = value
+                sql += ' AND '.join(w)
+
+        return self.db.query(sql).bind(params)
 
     def truncate_table(self, table):
         sql = 'TRUNCATE TABLE {table}'.format(table=self.db.quote_table_name(table))
