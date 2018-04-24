@@ -40,10 +40,31 @@ class Builder(object):
 
         return self.db.query(sql).bind(params)
 
-    @classmethod
     @abstractmethod
-    def update(cls, table, columns, condition):
-        pass
+    def update(self, table, columns, where=None):
+        params = {}
+        names = values = lines = []
+        for column, value in columns.items():
+            name = self.db.quote_column_name(column)
+            k = ':' + str(column)
+            lines.append(name + " = " + k)
+            params[k] = value
+
+        sql = "UPDATE {table} SET {lines}".format(table=self.db.quote_table_name(table), lines=', '.join(lines))
+        if where is not None:
+            if isinstance(where, str) and len(where):
+                sql += ' WHERE ' + self.db.quote_sql(where)
+            elif isinstance(where, dict) and len(where):
+                s = []
+                for column, value in where.items():
+                    s.append(self.db.quote_column_name(column) + ' = ::' + column)
+                    params['::' + column] = value
+
+                sql += ' WHERE ' + ' AND '.join(s)
+            else:
+                sql += ' WHERE 0 = 1'
+
+        return self.db.query(sql).bind(params)
 
     @classmethod
     @abstractmethod

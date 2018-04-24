@@ -23,8 +23,15 @@ raw_sql()
 item = db.query('SELECT [[id]], [[username]], [[password]] FROM user WHERE [[id]] = :id').bind({':id': 1}).one()
 print(item)
 
-# Insert sql
+# Insert SQL
 sql = db.builder().insert('user', {'username': 'sz', 'password': 'pwd'}).raw_sql()
 print(sql)
 sql = db.builder().insert('user', ['sz', 'pwd']).raw_sql()
+print(sql)
+
+# Update SQL
+sql = db.builder().update('user', {'username': 'sz', 'password': 'pwd'}, '[[id]]=1').raw_sql()
+print(sql)
+
+sql = db.builder().update('user', {'username': 'sz', 'password': 'pwd'}, {'id': 1, 'username': 'sss'}).raw_sql()
 print(sql)
