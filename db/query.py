@@ -73,3 +73,23 @@ class Query(object):
 
     def column(self):
         return self._query_internal('column')
+
+    def execute(self):
+        n = 0
+        raw_sql = self.raw_sql()
+        try:
+            cursor = self.db.cursor()
+            cursor.execute(raw_sql)
+            n = cursor.rowcount
+
+            cursor.close()
+            cursor = None
+        except Exception as ex:
+            raise Exception(str(ex))
+        finally:
+            cursor.close()
+            cursor = None
+            return n
+
+    def last_insert_id(self):
+        return self.db.cursor().lastrowid
