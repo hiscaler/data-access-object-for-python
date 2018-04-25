@@ -51,15 +51,14 @@ class Builder(object):
             params[k] = value
 
         sql = "UPDATE {table} SET {lines}".format(table=self.db.quote_table_name(table), lines=', '.join(lines))
-        if where is not None:
-            if isinstance(where, str) and len(where):
+        if where is not None and len(where):
+            if isinstance(where, str):
                 sql += ' WHERE ' + self.db.quote_sql(where)
-            elif isinstance(where, dict) and len(where):
+            elif isinstance(where, dict):
                 s = []
                 for column, value in where.items():
                     s.append(self.db.quote_column_name(column) + ' = ::' + column)
                     params['::' + column] = value
-
                 sql += ' WHERE ' + ' AND '.join(s)
             else:
                 sql += ' WHERE 0 = 1'
@@ -67,10 +66,11 @@ class Builder(object):
         return self.db.query(sql).bind(params)
 
     def delete(self, table, where=None):
+        """Generate DELETE sql"""
         sql = 'DELETE FROM {table}'.format(table=self.db.quote_table_name(table))
         params = {}
-        if where is not None:
-            if isinstance(where, str) and len(where) > 0:
+        if where is not None and len(where):
+            if isinstance(where, str):
                 sql += ' WHERE ' + where
             elif isinstance(where, dict):
                 w = []
