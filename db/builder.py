@@ -40,6 +40,12 @@ class Builder(object):
 
         return self.db.query(sql).bind(params)
 
+    @classmethod
+    @abstractmethod
+    def batch_insert(cls, table, columns, values):
+        """Generate batch INSERT sql"""
+        pass
+
     @abstractmethod
     def update(self, table, columns, where=None):
         params = {}
