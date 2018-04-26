@@ -11,32 +11,18 @@ db = Database('pymysql', {
 })
 db.open()
 
-from db.builder_mysql import BuilderMysql
-
-
-def raw_sql():
-    print(
-    db.query('SELECT [[id]], [[username]], [[password]] FROM {{%user}} WHERE [[id]] = :id').bind({':id': 1}).raw_sql())
-
-
-raw_sql()
-
-item = db.query('SELECT [[id]], [[username]], [[password]] FROM user WHERE [[id]] = :id').bind({':id': 1}).one()
+item = db.query('SELECT [[id]], [[username]], [[password]] FROM user WHERE [[id]] = :id').bind({':id': 2}).one()
 print(item)
 
 # Insert SQL
-sql = db.builder().insert('user', {'username': 'sz', 'password': 'pwd'}).raw_sql()
-print(sql)
-sql = db.builder().insert('user', ['sz', 'pwd']).raw_sql()
-print(sql)
+# value is dict
+db.builder().insert('user', {'username': 'sz', 'password': 'pwd'}).execute()
+# Value is not dict, is list or tuple
+db.builder().insert('user', ['sz', 'pwd4444']).execute()
 
 # Update SQL
-sql = db.builder().update('user', {'username': 'sz', 'password': 'pwd'}, '[[id]]=1').raw_sql()
-print(sql)
-
-sql = db.builder().update('user', {'username': 'sz', 'password': 'pwd'}, {'id': 1, 'username': 'sss'}).raw_sql()
-print(sql)
+db.builder().update('user', {'username': 'sz', 'password': 'pwd'}, '[[id]]=1').execute()
+db.builder().update('user', {'username': 'sz', 'password': 'pwd'}, {'id': 1, 'username': 'sss'}).execute()
 
 # Delete sql
-sql = db.builder().delete('user', {'username': 'sz', 'password': 'pwd'}).raw_sql()
-print sql
+db.builder().delete('user', {'username': 'sz', 'password': 'pwd'}).execute()
