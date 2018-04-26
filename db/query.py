@@ -1,5 +1,6 @@
 # encoding=utf-8
 
+
 class Query(object):
     def __init__(self, db, sql):
         self.db = db
@@ -18,11 +19,12 @@ class Query(object):
         return self.db.quote_sql(sql)
 
     def bind(self, params):
-        if len(self.params) == 0:
-            self.params = params
-        else:
-            for key, value in params.items():
-                self.params[key] = value
+        if isinstance(params, dict) and len(params):
+            if len(self.params) == 0:
+                self.params = params
+            else:
+                for key, value in params.items():
+                    self.params[key] = value
 
         return self
 
@@ -77,14 +79,14 @@ class Query(object):
     def execute(self):
         n = 0
         raw_sql = self.raw_sql()
+        print "raw sql = " + raw_sql
         try:
             cursor = self.db.cursor()
             cursor.execute(raw_sql)
             n = cursor.rowcount
-
-            cursor.close()
-            cursor = None
+            self.db.commit()
         except Exception as ex:
+            self.db.rollback()
             raise Exception(str(ex))
         finally:
             cursor.close()
