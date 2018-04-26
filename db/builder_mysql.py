@@ -3,7 +3,8 @@ from db.builder import Builder
 
 
 class BuilderMysql(Builder):
-    def quote_simple_table_name(self, name):
+    @staticmethod
+    def quote_simple_table_name(name):
         return name if name.find('`') > -1 else '`' + name + '`'
 
     def quote_column_name(self, name):
