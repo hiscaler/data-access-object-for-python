@@ -46,14 +46,13 @@ class Query(object):
             if result:
                 columns = [column[0] for column in cursor.description]
                 if method == 'all':
-                    for item in result:
-                        dict(zip(columns, item))
+                    result = [dict(zip(columns, item)) for item in result]
                 elif method == 'one':
-                    dict(zip(columns, result))
+                    result = dict(zip(columns, result))
                 elif method == 'scalar':
                     result = result[0]
                 elif method == 'column':
-                    result = tuple(item[0] for item in result)
+                    result = [item[0] for item in result]
                 else:
                     if method == 'scalar':
                         return False
