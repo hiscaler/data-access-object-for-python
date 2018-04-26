@@ -1,4 +1,5 @@
 # encoding=utf-8
+import logging
 
 
 class Query(object):
@@ -79,7 +80,7 @@ class Query(object):
     def execute(self):
         n = 0
         raw_sql = self.raw_sql()
-        print "raw sql = " + raw_sql
+        logging.debug("Generate SQL is " + raw_sql)
         try:
             cursor = self.db.cursor()
             cursor.execute(raw_sql)
