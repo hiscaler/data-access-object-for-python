@@ -83,7 +83,7 @@ class Builder(object):
                 for name, value in where.items():
                     w.append(self.db.quote_column_name(name) + ' = :' + name)
                     params[':' + name] = value
-                sql += ' AND '.join(w)
+                sql += ' WHERE ' + ' AND '.join(w)
 
         return self.db.query(sql).bind(params)
 
