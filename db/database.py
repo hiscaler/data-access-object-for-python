@@ -7,12 +7,12 @@ import importlib
 import re
 import string
 
+from builder import Builder
 from command import Command
 from dbexceptions import DatabaseErrorException
 from dbexceptions import NotSupportedErrorException
 from object import Object
 from query import Query
-from builder import Builder
 
 
 class Database(Object):

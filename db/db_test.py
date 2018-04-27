@@ -28,8 +28,14 @@ db.builder().update('user', {'username': 'sz', 'password': 'pwd'}, {'id': 1, 'us
 item = db.query('SELECT [[id]], [[username]], [[password]] FROM user WHERE [[id]] = :id').bind({':id': 1}).one()
 print(item)
 
-ids = db.query('select * from user').all()
-print ids
+users = db.query('SELECT * FROM user').all()
+print users
+
+user_ids = db.query('SELECT [[id]] FROM user').column()
+print user_ids
+
+user_id = db.query('SELECT COUNT(*) AS [[c]] FROM user').scalar()
+print user_id
 
 # Delete sql
-db.builder().delete('user', {'username': 'sz', 'password': 'pwd'}).execute()
+# db.builder().delete('user', {'username': 'sz', 'password': 'pwd'}).execute()

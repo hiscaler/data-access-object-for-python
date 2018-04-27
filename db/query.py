@@ -31,6 +31,7 @@ class Query(object):
 
     def _query_internal(self, method):
         raw_sql = self.raw_sql()
+        logging.debug("Generate SQL is " + raw_sql)
         try:
             cursor = self.db.cursor()
             cursor.execute(raw_sql)
