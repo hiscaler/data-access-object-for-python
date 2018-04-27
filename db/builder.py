@@ -40,11 +40,31 @@ class Builder(object):
 
         return self.db.query(sql).bind(params)
 
-    @classmethod
-    @abstractmethod
-    def batch_insert(cls, table, columns, values):
+    def batch_insert(self, table, columns, values):
         """Generate batch INSERT sql"""
-        pass
+        if not isinstance(values, list) and not isinstance(values, tuple):
+            raise Exception('values params error.')
+
+        if len(values[0]) != len(columns):
+            raise Exception('fields length is not match values')
+
+        params = {}
+        rows = []
+        for i in range(len(values)):
+            row_params = []
+            row = values[i]
+            for key in range(len(row)):
+                k = ':' + str(columns[key]) + str(i) + str(key)
+                row_params.append(k)
+                params[k] = row[key]
+            rows.append('(' + ', '.join(row_params) + ')')
+
+        columns = [self.db.quote_column_name(column) for column in columns]
+        sql = "INSERT INTO {table} ({columns}) VALUES {values}".format(table=self.db.quote_table_name(table),
+                                                                       columns=', '.join(columns),
+                                                                       values=', '.join(rows))
+
+        return self.db.query(sql).bind(params)
 
     @abstractmethod
     def update(self, table, columns, where=None):
