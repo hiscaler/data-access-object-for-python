@@ -29,13 +29,17 @@ item = db.query('SELECT [[id]], [[username]], [[password]] FROM user WHERE [[id]
 print(item)
 
 users = db.query('SELECT * FROM user').all()
-print users
+print(users)
 
 user_ids = db.query('SELECT [[id]] FROM user').column()
-print user_ids
+print(user_ids)
 
 user_id = db.query('SELECT COUNT(*) AS [[c]] FROM user').scalar()
-print user_id
+print(user_id)
+
+n = db.builder().batch_insert('user', ['username', 'password'], [['user1', 'pwd1'], ['user2', 'pwd2']]).execute()
+print(n)
 
 # Delete sql
-# db.builder().delete('user', {'username': 'sz', 'password': 'pwd'}).execute()
+n = db.builder().delete('user', {'username': 'sz', 'password': 'pwd'}).execute()
+print(n)
