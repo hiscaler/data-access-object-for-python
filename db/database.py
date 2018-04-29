@@ -134,6 +134,9 @@ class Database(Object):
     def builder(self):
         return Builder(self)
 
+    def select(self):
+        return self.builder().select()
+
     def quote_table_name(self, name):
         return self.get_builder().quote_table_name(name)
 

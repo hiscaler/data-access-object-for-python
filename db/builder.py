@@ -1,10 +1,15 @@
 # encoding=utf-8
-from abc import ABCMeta, abstractmethod
+from abc import abstractmethod
+
+from db.select import Select
 
 
 class Builder(object):
     def __init__(self, db):
         self.db = db
+
+    def select(self):
+        return Select(self.db)
 
     @classmethod
     @abstractmethod

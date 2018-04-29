@@ -2,7 +2,7 @@
 
 class Select(object):
     def __init__(self, db):
-        self.db = db;
+        self.db = db
         self._selects = []
         self._distinct = False
         self._from = ''
@@ -17,12 +17,20 @@ class Select(object):
         self.params = {}
 
     def select(self, columns):
-        self._selects = columns
+        if isinstance(columns, str):
+            self._selects.append(columns)
+        elif isinstance(columns, list) or isinstance(columns, tuple):
+            self._selects = columns
 
         return self
 
-    def and_select(self, columns):
-        self._selects.append(columns)
+    def add_select(self, columns):
+        if isinstance(columns, str):
+            self._selects.append(columns)
+        elif isinstance(columns, list):
+            self._selects += columns
+        elif isinstance(columns, tuple):
+            self._selects += list(columns)
 
         return self
 
@@ -39,4 +47,21 @@ class Select(object):
     def where(self, where):
         self.where = where
 
-        return self
+    def build(self):
+        sql = 'SELECT ' + ", ".join(
+            [self.db.quote_column_name(column) for column in self._selects]) + " FROM " + self.db.quote_table_name(
+            self._from)
+        if self.where is not None and len(self.where):
+            sql += ' WHERE '
+
+        params = {}
+        for key, value in self.params.items():
+            params[key] = value
+
+        return self.db.query(sql).bind(params)
+
+    def raw_sql(self):
+        return self.build().raw_sql()
+
+    def one(self):
+        return self.build().one()

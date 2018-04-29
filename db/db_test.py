@@ -43,3 +43,7 @@ print(n)
 # Delete sql
 n = db.builder().delete('user', {'username': 'sz', 'password': 'pwd'}).execute()
 print(n)
+
+# Select test
+item = db.select().select('id').add_select(['username']).add_select(('password')).fm('user').raw_sql()
+print(item)
