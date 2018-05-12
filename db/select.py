@@ -61,9 +61,14 @@ class Select(object):
 
             for key, value in params.items():
                 w = w.replace(key, self.db.quote_value(value))
-        elif isinstance(where, dict):
-            for key, value in where.items():
-                self._params[':' + key] = value
+        elif isinstance(where, dict) and len(where) > 0:
+            _w = []
+            for field_name, value in where.items():
+                _w.append(
+                    "{field} = {value}".format(field=self.db.quote_column_name(field_name), value=':' + field_name))
+                self._params[':' + field_name] = value
+
+            w = " AND ".join(_w)
         else:
             raise Exception('Params error.')
 
@@ -98,11 +103,7 @@ class Select(object):
         if len(self._where):
             sql += ' WHERE ' + self._where
 
-        params = {}
-        for key, value in self._params.items():
-            params[key] = value
-
-        return self.db.query(sql).bind(params)
+        return self.db.query(sql).bind(self._params)
 
     def raw_sql(self):
         return self.build().raw_sql()
