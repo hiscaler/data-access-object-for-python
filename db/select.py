@@ -64,10 +64,9 @@ class Select(object):
         elif isinstance(where, dict) and len(where) > 0:
             _w = []
             for field_name, value in where.items():
-                _w.append(
-                    "{field} = {value}".format(field=self.db.quote_column_name(field_name), value=':' + field_name))
-                self._params[':' + field_name] = value
-
+                _w.append("{field} = <{value}>".format(field=self.db.quote_column_name(field_name), value=field_name))
+                self._params['<' + field_name + '>'] = value
+                
             w = " AND ".join(_w)
         else:
             raise Exception('Params error.')
