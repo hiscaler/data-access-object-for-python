@@ -6,15 +6,15 @@ class Select(object):
         self._selects = []
         self._distinct = False
         self._from = ''
-        self.where = ''
-        self.join = []
-        self.order_by = ''
-        self.group_by = ''
-        self.having = ''
-        self.union = ''
-        self.limit = 10
-        self.offset = 0
-        self.params = {}
+        self._where = ''
+        self._join = []
+        self._order_by = ''
+        self._group_by = ''
+        self._having = ''
+        self._union = ''
+        self._limit = 10
+        self._offset = 0
+        self._params = {}
 
     def select(self, columns):
         if isinstance(columns, str):
@@ -39,23 +39,30 @@ class Select(object):
 
         return self
 
-    def fm(self, tables):
+    def from_table(self, tables):
         self._from = tables
 
         return self
 
     def where(self, where):
-        self.where = where
+        self._where = where
+
+        return self
+
+    def and_where(self, where):
+        self._where = self._where + ' AND ' + where
+
+        return self
 
     def build(self):
         sql = 'SELECT ' + ", ".join(
             [self.db.quote_column_name(column) for column in self._selects]) + " FROM " + self.db.quote_table_name(
             self._from)
-        if self.where is not None and len(self.where):
-            sql += ' WHERE '
+        if self._where is not None and len(self._where):
+            sql += ' WHERE ' + self._where
 
         params = {}
-        for key, value in self.params.items():
+        for key, value in self._params.items():
             params[key] = value
 
         return self.db.query(sql).bind(params)
@@ -65,3 +72,12 @@ class Select(object):
 
     def one(self):
         return self.build().one()
+
+    def all(self):
+        return self.build().all()
+
+    def scalar(self):
+        return self.build().scalar()
+
+    def column(self):
+        return self.build.column()
