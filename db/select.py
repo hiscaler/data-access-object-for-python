@@ -44,13 +44,50 @@ class Select(object):
 
         return self
 
-    def where(self, where):
-        self._where = where
+    def _parse_where(self, where, params={}, operation='AND', append=True):
+        """Parse where conditions
+        
+        @:param where string|dict
+        @:param params dict
+        @:param operation string
+        @:param append boolean
+        @:return string
+        """
+        w = ''
+        if isinstance(where, str):
+            w = where
+            if params is not None and not isinstance(params, dict) and len(params) == 0:
+                raise Exception('params type is not dict or is empty.')
+
+            for key, value in params.items():
+                w = w.replace(key, self.db.quote_value(value))
+        elif isinstance(where, dict):
+            for key, value in where.items():
+                self._params[':' + key] = value
+        else:
+            raise Exception('Params error.')
+
+        if len(w) > 0:
+            if append:
+                if len(self._where) == 0:
+                    self._where = w
+                else:
+                    self._where += ' {op} ({where})'.format(op=operation, where=w)
+            else:
+                self._where = w
+
+    def where(self, where, params={}):
+        self._parse_where(where, params, None, False)
 
         return self
 
-    def and_where(self, where):
-        self._where = self._where + ' AND ' + where
+    def and_where(self, where, params={}):
+        self._parse_where(where, params, 'AND')
+
+        return self
+
+    def or_where(self, where, params={}):
+        self._parse_where(where, params, 'OR')
 
         return self
 
@@ -58,7 +95,7 @@ class Select(object):
         sql = 'SELECT ' + ", ".join(
             [self.db.quote_column_name(column) for column in self._selects]) + " FROM " + self.db.quote_table_name(
             self._from)
-        if self._where is not None and len(self._where):
+        if len(self._where):
             sql += ' WHERE ' + self._where
 
         params = {}
